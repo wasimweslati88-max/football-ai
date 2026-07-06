@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stats - Football AI</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0a0e1a;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+    .header {
+      background: #111827;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #1e40af;
+    }
+    .logo { display: flex; align-items: center; gap: 0.75rem; }
+    .logo i { color: #3b82f6; font-size: 1.5rem; }
+    .logo h1 { font-size: 1.25rem; }
+    .logo span { color: #3b82f6; }
+    .nav a {
+      color: #94a3b8;
+      text-decoration: none;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      transition: all 0.2s;
+      font-size: 0.875rem;
+    }
+    .nav a:hover { color: #e2e8f0; background: #1e293b; }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+    .stat-card {
+      background: #111827;
+      padding: 1.5rem;
+      border-radius: 0.75rem;
+      border: 1px solid #1e293b;
+    }
+    .stat-card h3 { font-size: 1.125rem; margin-bottom: 1rem; color: #3b82f6; }
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid #0f172a;
+      font-size: 0.875rem;
+    }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-row .label { color: #94a3b8; }
+    .stat-row .value { font-weight: 600; }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #1e293b;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: #3b82f6;
+    }
+
+    .empty { text-align: center; padding: 4rem; color: #94a3b8; }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="logo">
+      <i class="fas fa-futbol"></i>
+      <h1>Football <span>AI</span></h1>
+    </div>
+    <nav class="nav">
+      <a href="/"><i class="fas fa-home"></i> Home</a>
+      <a href="/history"><i class="fas fa-chart-line"></i> History</a>
+      <a href="/stats" style="color:#3b82f6;"><i class="fas fa-trophy"></i> Stats</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <h2 style="margin-bottom:1.5rem;"><i class="fas fa-chart-pie"></i> Prediction Statistics</h2>
+
+    <div class="stats-grid" id="statsGrid">
+      <div class="empty"><i class="fas fa-spinner fa-spin"></i><p>Loading stats...</p></div>
+    </div>
+  </main>
+
+  <script>
+    const token = localStorage.getItem('fai_token');
+    if (!token) window.location.href = '/login';
+
+    async function loadStats() {
+      try {
+        const res = await fetch('/api/predictions/accuracy', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+
+        if (!data.success) throw new Error(data.message);
+
+        const container = document.getElementById('statsGrid');
+
+        let html = '';
+
+        // Overall
+        html += `
+          <div class="stat-card">
+            <h3><i class="fas fa-bullseye"></i> Overall Accuracy</h3>
+            <div class="stat-row">
+              <span class="label">Total Predictions</span>
+              <span class="value">${data.overall.total}</span>
+            </div>
+            <div class="stat-row">
+              <span class="label">Correct</span>
+              <span class="value" style="color:#22c55e">${data.overall.correct}</span>
+            </div>
+            <div class="stat-row">
+              <span class="label">Accuracy Rate</span>
+              <span class="value" style="color:#3b82f6">${data.overall.accuracy}%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: ${data.overall.accuracy}%"></div>
+            </div>
+          </div>
+        `;
+
+        // By Risk Level
+        if (data.byRisk && data.byRisk.length > 0) {
+          html += `
+            <div class="stat-card">
+              <h3><i class="fas fa-shield-alt"></i> By Risk Level</h3>
+              ${data.byRisk.map(r => `
+                <div class="stat-row">
+                  <span class="label">${r._id || 'Unknown'}</span>
+                  <span class="value">${r.correct}/${r.total} (${((r.correct/r.total)*100).toFixed(1)}%)</span>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+
+        // By Bet Type
+        if (data.byBetType && data.byBetType.length > 0) {
+          html += `
+            <div class="stat-card">
+              <h3><i class="fas fa-futbol"></i> By Bet Type</h3>
+              ${data.byBetType.map(b => `
+                <div class="stat-row">
+                  <span class="label">${b._id || 'Unknown'}</span>
+                  <span class="value">${b.correct}/${b.total} (${((b.correct/b.total)*100).toFixed(1)}%)</span>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+
+        container.innerHTML = html;
+
+      } catch (err) {
+        document.getElementById('statsGrid').innerHTML = `<div class="empty" style="color:#ef4444;">Error: ${err.message}</div>`;
+      }
+    }
+
+    loadStats();
+  </script>
+</body>
+</html>

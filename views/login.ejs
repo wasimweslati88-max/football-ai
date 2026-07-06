@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Football AI</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0a0e1a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .login-box {
+      background: #111827;
+      padding: 2.5rem;
+      border-radius: 1rem;
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+      border: 1px solid #1e293b;
+    }
+    .logo { margin-bottom: 1.5rem; }
+    .logo i { color: #3b82f6; font-size: 3rem; }
+    .logo h1 { font-size: 1.5rem; margin-top: 0.5rem; }
+    .logo span { color: #3b82f6; }
+    .form-group { margin-bottom: 1.25rem; text-align: left; }
+    .form-group label { display: block; margin-bottom: 0.5rem; font-size: 0.875rem; color: #94a3b8; }
+    .form-group input {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      border: 1px solid #334155;
+      border-radius: 0.5rem;
+      background: #0f172a;
+      color: #e2e8f0;
+      font-size: 1rem;
+    }
+    .form-group input:focus { outline: none; border-color: #3b82f6; }
+    .btn {
+      width: 100%;
+      padding: 0.875rem;
+      border: none;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: #3b82f6;
+      color: white;
+      transition: all 0.2s;
+    }
+    .btn:hover { background: #2563eb; }
+    .links { margin-top: 1.5rem; }
+    .links a { color: #3b82f6; text-decoration: none; font-size: 0.875rem; }
+    .links a:hover { text-decoration: underline; }
+    .error { color: #ef4444; font-size: 0.875rem; margin-top: 0.75rem; display: none; }
+  </style>
+</head>
+<body>
+  <div class="login-box">
+    <div class="logo">
+      <i class="fas fa-futbol"></i>
+      <h1>Football <span>AI</span></h1>
+    </div>
+    <div class="form-group">
+      <label><i class="fas fa-key"></i> Access Code</label>
+      <input type="text" id="accessCode" placeholder="Enter your access code">
+    </div>
+    <button class="btn" onclick="login()">Access Predictions</button>
+    <p class="error" id="error"></p>
+    <div class="links">
+      <a href="/"><i class="fas fa-arrow-left"></i> Back to Home</a>
+    </div>
+  </div>
+
+  <script>
+    async function login() {
+      const code = document.getElementById('accessCode').value.trim();
+      const errorEl = document.getElementById('error');
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ accessCode: code })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          localStorage.setItem('fai_token', data.token);
+          window.location.href = '/';
+        } else {
+          errorEl.textContent = data.message || 'Invalid access code';
+          errorEl.style.display = 'block';
+        }
+      } catch (err) {
+        errorEl.textContent = 'Connection error. Please try again.';
+        errorEl.style.display = 'block';
+      }
+    }
+
+    document.getElementById('accessCode').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') login();
+    });
+  </script>
+</body>
+</html>

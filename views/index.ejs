@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Football AI - Smart Predictions</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0a0e1a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+    .header {
+      background: linear-gradient(135deg, #0f1d3a 0%, #0a0e1a 100%);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #1e40af;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .logo { display: flex; align-items: center; gap: 0.75rem; }
+    .logo i { color: #3b82f6; font-size: 1.75rem; }
+    .logo h1 { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.5px; }
+    .logo span { color: #3b82f6; }
+    .nav { display: flex; gap: 0.5rem; align-items: center; }
+    .nav a, .nav button {
+      color: #94a3b8;
+      text-decoration: none;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      transition: all 0.2s;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .nav a:hover, .nav button:hover { color: #e2e8f0; background: #1e293b; }
+    .nav a.active { color: #3b82f6; background: rgba(59,130,246,0.1); }
+
+    .container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+    .hero {
+      text-align: center;
+      padding: 3rem 1rem 2rem;
+      background: linear-gradient(135deg, #0f1d3a 0%, #0a0e1a 100%);
+      border-radius: 1.25rem;
+      margin-bottom: 2rem;
+      border: 1px solid #1e293b;
+    }
+    .hero h2 { font-size: 2.25rem; margin-bottom: 0.5rem; font-weight: 800; }
+    .hero p { color: #94a3b8; font-size: 1.1rem; max-width: 500px; margin: 0 auto; }
+    .date-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(59,130,246,0.1);
+      color: #60a5fa;
+      padding: 0.5rem 1.25rem;
+      border-radius: 2rem;
+      margin-top: 1rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      border: 1px solid rgba(59,130,246,0.2);
+    }
+
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: #111827;
+      padding: 1.25rem;
+      border-radius: 0.875rem;
+      text-align: center;
+      border: 1px solid #1e293b;
+    }
+    .stat-card .number { font-size: 1.875rem; font-weight: 800; color: #3b82f6; }
+    .stat-card .label { color: #64748b; font-size: 0.8rem; margin-top: 0.25rem; }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+    .section-title i { color: #3b82f6; }
+
+    .matches-grid { display: grid; gap: 1rem; }
+
+    .match-card {
+      background: #111827;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      border: 1px solid #1e293b;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .match-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 4px;
+      background: #3b82f6;
+      border-radius: 1rem 0 0 1rem;
+    }
+    .match-card:hover { border-color: #3b82f6; transform: translateY(-2px); }
+
+    .match-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-left: 0.5rem;
+    }
+    .league-info { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: #64748b; }
+    .league-info img { width: 18px; height: 18px; object-fit: contain; }
+    .match-time { 
+      font-size: 0.8rem; 
+      color: #64748b; 
+      display: flex; 
+      align-items: center; 
+      gap: 0.35rem;
+      background: rgba(255,255,255,0.03);
+      padding: 0.35rem 0.75rem;
+      border-radius: 0.5rem;
+    }
+
+    .teams {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+      padding-left: 0.5rem;
+    }
+    .team { display: flex; align-items: center; gap: 0.75rem; flex: 1; }
+    .team.home { justify-content: flex-end; text-align: right; }
+    .team img { width: 42px; height: 42px; object-fit: contain; }
+    .team-name { font-weight: 700; font-size: 1rem; }
+    .vs { 
+      color: #475569; 
+      font-weight: 800; 
+      font-size: 0.75rem;
+      background: #0f172a;
+      padding: 0.35rem 0.75rem;
+      border-radius: 0.5rem;
+      border: 1px solid #1e293b;
+    }
+
+    .prediction-box {
+      background: #0f172a;
+      border-radius: 0.875rem;
+      padding: 1.25rem;
+      margin-bottom: 0.75rem;
+      border: 1px solid #1e293b;
+    }
+    .prediction-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .prediction-item { display: flex; flex-direction: column; gap: 0.25rem; }
+    .prediction-item .label { font-size: 0.7rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+    .prediction-item .value { font-weight: 700; font-size: 1rem; }
+
+    .bet-badge {
+      background: linear-gradient(135deg, #2563eb, #3b82f6);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-weight: 800;
+      font-size: 1.125rem;
+      box-shadow: 0 2px 10px rgba(59,130,246,0.3);
+    }
+    .odds-badge {
+      color: #22c55e;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .confidence-track {
+      width: 100px;
+      height: 8px;
+      background: #1e293b;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .confidence-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.8s ease;
+    }
+
+    .risk-badge {
+      padding: 0.35rem 0.875rem;
+      border-radius: 2rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .risk-low { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+    .risk-medium { background: rgba(234,179,8,0.15); color: #facc15; border: 1px solid rgba(234,179,8,0.3); }
+    .risk-high { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+
+    .score-prediction {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+    .score-prediction .dash { color: #475569; }
+
+    .reason-box {
+      background: rgba(59,130,246,0.05);
+      border-left: 3px solid #3b82f6;
+      padding: 0.875rem 1rem;
+      border-radius: 0 0.5rem 0.5rem 0;
+      margin-top: 0.75rem;
+      font-size: 0.875rem;
+      color: #94a3b8;
+      line-height: 1.6;
+    }
+    .reason-box i { color: #fbbf24; margin-right: 0.35rem; }
+
+    .stats-toggle {
+      color: #60a5fa;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 0.5rem;
+      transition: color 0.2s;
+    }
+    .stats-toggle:hover { color: #93c5fd; }
+    .stats-toggle i { transition: transform 0.3s; }
+    .stats-toggle.open i.fa-chevron-down { transform: rotate(180deg); }
+
+    .stats-details {
+      display: none;
+      padding-top: 0.75rem;
+      border-top: 1px solid #1e293b;
+      margin-top: 0.5rem;
+    }
+    .stats-details.show { display: block; }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0.5rem;
+    }
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.625rem 0.875rem;
+      background: #0f172a;
+      border-radius: 0.5rem;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      border: 1px solid #1e293b;
+    }
+    .stat-item i { color: #3b82f6; font-size: 0.75rem; }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: #64748b;
+    }
+    .empty-state i { font-size: 3.5rem; margin-bottom: 1rem; color: #1e293b; }
+    .empty-state h3 { color: #94a3b8; margin-bottom: 0.5rem; }
+    .empty-state p { font-size: 0.9rem; }
+
+    .loading { text-align: center; padding: 4rem 2rem; }
+    .loading i { font-size: 2rem; color: #3b82f6; animation: spin 1s linear infinite; margin-bottom: 1rem; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .login-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      backdrop-filter: blur(4px);
+    }
+    .login-modal.show { display: flex; }
+    .login-box {
+      background: #111827;
+      padding: 2.5rem;
+      border-radius: 1rem;
+      width: 100%;
+      max-width: 400px;
+      border: 1px solid #1e293b;
+    }
+    .login-box .logo { justify-content: center; margin-bottom: 1.5rem; }
+    .login-box h3 { text-align: center; margin-bottom: 1.5rem; color: #e2e8f0; }
+    .form-group { margin-bottom: 1.25rem; }
+    .form-group label { display: block; margin-bottom: 0.5rem; font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-group input {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      border: 1px solid #334155;
+      border-radius: 0.5rem;
+      background: #0f172a;
+      color: #e2e8f0;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus { outline: none; border-color: #3b82f6; }
+    .btn {
+      width: 100%;
+      padding: 0.875rem;
+      border: none;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary { background: linear-gradient(135deg, #2563eb, #3b82f6); color: white; }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(59,130,246,0.4); }
+    .error-msg { color: #ef4444; font-size: 0.875rem; margin-top: 0.75rem; text-align: center; display: none; }
+
+    .footer {
+      text-align: center;
+      padding: 2rem;
+      color: #475569;
+      font-size: 0.8rem;
+      border-top: 1px solid #1e293b;
+      margin-top: 2rem;
+    }
+
+    .top-badge {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: linear-gradient(135deg, #f59e0b, #fbbf24);
+      color: #0a0e1a;
+      padding: 0.25rem 0.75rem;
+      border-radius: 2rem;
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 768px) {
+      .header { flex-direction: column; gap: 1rem; padding: 1rem; }
+      .nav { flex-wrap: wrap; justify-content: center; }
+      .hero h2 { font-size: 1.75rem; }
+      .teams { flex-direction: column; text-align: center; }
+      .team.home { justify-content: center; text-align: center; }
+      .prediction-row { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="logo">
+      <i class="fas fa-futbol"></i>
+      <h1>Football <span>AI</span></h1>
+    </div>
+    <nav class="nav" id="nav">
+      <a href="/" class="active"><i class="fas fa-home"></i> Matches</a>
+      <a href="/history"><i class="fas fa-chart-line"></i> History</a>
+      <a href="/stats"><i class="fas fa-trophy"></i> Stats</a>
+      <button id="loginBtn"><i class="fas fa-user"></i> Login</button>
+      <button id="logoutBtn" style="display:none;"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div class="hero">
+      <h2>Today's Top 10 Predictions</h2>
+      <p>AI selects only the safest matches worldwide with Low Risk & High Confidence</p>
+      <div class="date-badge">
+        <i class="fas fa-calendar"></i>
+        <span id="currentDate"></span>
+      </div>
+    </div>
+
+    <div class="stats-bar" id="statsBar">
+      <div class="stat-card">
+        <div class="number" id="totalMatches">-</div>
+        <div class="label">Matches Analyzed</div>
+      </div>
+      <div class="stat-card">
+        <div class="number" id="recommendedCount">-</div>
+        <div class="label">Low Risk Selected</div>
+      </div>
+      <div class="stat-card">
+        <div class="number" id="avgConfidence">-%</div>
+        <div class="label">Avg Confidence</div>
+      </div>
+      <div class="stat-card">
+        <div class="number" id="successRate">-%</div>
+        <div class="label">Success Rate</div>
+      </div>
+    </div>
+
+    <div class="section-title">
+      <i class="fas fa-star"></i>
+      <span>Recommended Matches</span>
+    </div>
+
+    <div id="matchesContainer">
+      <div class="loading"><i class="fas fa-circle-notch"></i><p>Analyzing matches with AI...</p></div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p> Football AI. All predictions are for informational purposes only. Bet responsibly.</p>
+  </footer>
+
+  <div class="login-modal" id="loginModal">
+    <div class="login-box">
+      <div class="logo">
+        <i class="fas fa-futbol"></i>
+        <h1>Football <span>AI</span></h1>
+      </div>
+      <h3><i class="fas fa-lock"></i> Enter Access Code</h3>
+      <div class="form-group">
+        <label>Access Code</label>
+        <input type="text" id="accessCode" placeholder="e.g., FAI-XXXXXXXX" autocomplete="off">
+      </div>
+      <button class="btn btn-primary" onclick="login()">Access Predictions</button>
+      <p class="error-msg" id="loginError">Invalid access code</p>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = '';
+    let token = localStorage.getItem('fai_token');
+
+    document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-GB', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+    });
+
+    function updateAuthState() {
+      const loginBtn = document.getElementById('loginBtn');
+      const logoutBtn = document.getElementById('logoutBtn');
+
+      if (token) {
+        loginBtn.style.display = 'none';
+        logoutBtn.style.display = 'flex';
+        loadMatches();
+        loadAccuracy();
+      } else {
+        loginBtn.style.display = 'flex';
+        logoutBtn.style.display = 'none';
+        showLogin();
+      }
+    }
+
+    document.getElementById('loginBtn').onclick = () => {
+      document.getElementById('loginModal').classList.add('show');
+      document.getElementById('accessCode').focus();
+    };
+
+    document.getElementById('logoutBtn').onclick = () => {
+      localStorage.removeItem('fai_token');
+      token = null;
+      updateAuthState();
+    };
+
+    document.getElementById('loginModal').onclick = (e) => {
+      if (e.target === e.currentTarget) {
+        document.getElementById('loginModal').classList.remove('show');
+      }
+    };
+
+    document.getElementById('accessCode').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') login();
+    });
+
+    async function login() {
+      const code = document.getElementById('accessCode').value.trim();
+      const errorEl = document.getElementById('loginError');
+
+      try {
+        const res = await fetch(`${API_URL}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ accessCode: code })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          token = data.token;
+          localStorage.setItem('fai_token', token);
+          document.getElementById('loginModal').classList.remove('show');
+          document.getElementById('accessCode').value = '';
+          errorEl.style.display = 'none';
+          updateAuthState();
+        } else {
+          errorEl.textContent = data.message || 'Invalid access code';
+          errorEl.style.display = 'block';
+        }
+      } catch (err) {
+        errorEl.textContent = 'Connection error. Please try again.';
+        errorEl.style.display = 'block';
+      }
+    }
+
+    function showLogin() {
+      document.getElementById('matchesContainer').innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-lock"></i>
+          <h3>Login Required</h3>
+          <p>Please login with your access code to view today's top 10 predictions.</p>
+          <button class="btn btn-primary" style="width:auto; margin-top:1rem; padding: 0.75rem 2rem;" 
+            onclick="document.getElementById('loginModal').classList.add('show')">
+            <i class="fas fa-sign-in-alt"></i> Login Now
+          </button>
+        </div>
+      `;
+    }
+
+    async function loadAccuracy() {
+      try {
+        const res = await fetch(`${API_URL}/api/predictions/accuracy`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success && data.overall.accuracy > 0) {
+          document.getElementById('successRate').textContent = data.overall.accuracy + '%';
+        }
+      } catch (e) {}
+    }
+
+    async function loadMatches() {
+      const container = document.getElementById('matchesContainer');
+      container.innerHTML = '<div class="loading"><i class="fas fa-circle-notch"></i><p>Loading AI predictions...</p></div>';
+
+      try {
+        const res = await fetch(`${API_URL}/api/matches/today`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const data = await res.json();
+
+        if (!data.success) {
+          if (res.status === 401) {
+            localStorage.removeItem('fai_token');
+            token = null;
+            updateAuthState();
+            return;
+          }
+          throw new Error(data.message);
+        }
+
+        updateStats(data.matches);
+        renderMatches(data.matches);
+
+      } catch (err) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Error Loading Matches</h3>
+            <p>${err.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    function updateStats(matches) {
+      document.getElementById('totalMatches').textContent = matches.length;
+      const recommended = matches.filter(m => m.confidence >= 70);
+      document.getElementById('recommendedCount').textContent = recommended.length;
+
+      const avgConf = matches.length > 0 
+        ? Math.round(matches.reduce((s, m) => s + m.confidence, 0) / matches.length)
+        : 0;
+      document.getElementById('avgConfidence').textContent = avgConf + '%';
+    }
+
+    function getRiskClass(risk) {
+      return risk === 'Low' ? 'risk-low' : risk === 'Medium' ? 'risk-medium' : 'risk-high';
+    }
+
+    function getConfidenceColor(conf) {
+      return conf >= 80 ? '#22c55e' : conf >= 70 ? '#3b82f6' : conf >= 60 ? '#eab308' : '#ef4444';
+    }
+
+    function renderMatches(matches) {
+      const container = document.getElementById('matchesContainer');
+
+      if (matches.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-calendar-times"></i>
+            <h3>No Low Risk Matches Today</h3>
+            <p>The AI couldn't find any matches that meet our strict safety criteria today. Check back tomorrow!</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = '<div class="matches-grid">' + matches.map((match, i) => `
+        <div class="match-card" style="animation: fadeIn 0.4s ease ${i * 0.08}s both;">
+          ${i < 3 ? '<span class="top-badge"><i class="fas fa-crown"></i> Top ' + (i+1) + '</span>' : ''}
+
+          <div class="match-header">
+            <div class="league-info">
+              ${match.league.logo ? `<img src="${match.league.logo}" alt="" onerror="this.style.display='none'">` : '<i class="fas fa-trophy"></i>'}
+              <span>${match.league.name}</span>
+              ${match.league.country ? `<span style="color:#334155">|</span> <span>${match.league.country}</span>` : ''}
+            </div>
+            <div class="match-time">
+              <i class="fas fa-clock"></i>
+              ${new Date(match.date).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'})}
+            </div>
+          </div>
+
+          <div class="teams">
+            <div class="team home">
+              <div>
+                <div class="team-name">${match.homeTeam.name}</div>
+              </div>
+              ${match.homeTeam.logo ? `<img src="${match.homeTeam.logo}" alt="" onerror="this.style.display='none'">` : '<i class="fas fa-shield-alt" style="font-size:42px;color:#334155"></i>'}
+            </div>
+            <span class="vs">VS</span>
+            <div class="team">
+              ${match.awayTeam.logo ? `<img src="${match.awayTeam.logo}" alt="" onerror="this.style.display='none'">` : '<i class="fas fa-shield-alt" style="font-size:42px;color:#334155"></i>'}
+              <div>
+                <div class="team-name">${match.awayTeam.name}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="prediction-box">
+            <div class="prediction-row">
+              <div class="prediction-item">
+                <span class="label">Best Bet</span>
+                <span class="bet-badge">${match.bestBet.type}</span>
+              </div>
+              <div class="prediction-item">
+                <span class="label">Odds</span>
+                <span class="odds-badge">@${match.bestBet.odds}</span>
+              </div>
+              <div class="prediction-item">
+                <span class="label">Predicted Score</span>
+                <span class="score-prediction">
+                  ${match.predictedScore.home} <span class="dash">-</span> ${match.predictedScore.away}
+                </span>
+              </div>
+              <div class="prediction-item">
+                <span class="label">Confidence</span>
+                <div style="display:flex;align-items:center;gap:0.5rem;">
+                  <div class="confidence-track">
+                    <div class="confidence-fill" style="width: ${match.confidence}%; background: ${getConfidenceColor(match.confidence)};"></div>
+                  </div>
+                  <span style="font-weight:700;color:${getConfidenceColor(match.confidence)};">${match.confidence}%</span>
+                </div>
+              </div>
+              <div class="prediction-item">
+                <span class="label">Risk Level</span>
+                <span class="risk-badge ${getRiskClass(match.riskLevel)}">${match.riskLevel}</span>
+              </div>
+            </div>
+
+            ${match.recommendationReason ? `
+            <div class="reason-box">
+              <i class="fas fa-lightbulb"></i>
+              ${match.recommendationReason}
+            </div>
+            ` : ''}
+          </div>
+
+          <div class="stats-toggle" onclick="toggleStats(this)">
+            <i class="fas fa-chart-bar"></i> Key Statistics
+            <i class="fas fa-chevron-down"></i>
+          </div>
+          <div class="stats-details">
+            <div class="stats-grid">
+              ${match.keyStats.map(s => `<div class="stat-item"><i class="fas fa-info-circle"></i> ${s}</div>`).join('')}
+            </div>
+          </div>
+        </div>
+      `).join('') + '</div>';
+    }
+
+    function toggleStats(el) {
+      const details = el.nextElementSibling;
+      details.classList.toggle('show');
+      el.classList.toggle('open');
+    }
+
+    // Initialize
+    updateAuthState();
+  </script>
+</body>
+</html>

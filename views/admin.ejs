@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Football AI - Admin Panel</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0a0e1a;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+    .header {
+      background: #111827;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #1e40af;
+    }
+    .logo { display: flex; align-items: center; gap: 0.75rem; }
+    .logo i { color: #3b82f6; font-size: 1.5rem; }
+    .logo h1 { font-size: 1.25rem; }
+    .logo span { color: #3b82f6; }
+    .btn-danger {
+      background: #dc2626;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .btn-danger:hover { background: #b91c1c; }
+
+    .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+
+    .login-screen {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 80vh;
+    }
+    .login-box {
+      background: #111827;
+      padding: 2.5rem;
+      border-radius: 1rem;
+      width: 100%;
+      max-width: 400px;
+      border: 1px solid #1e293b;
+    }
+    .login-box h2 { margin-bottom: 1.5rem; text-align: center; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; margin-bottom: 0.5rem; font-size: 0.875rem; color: #94a3b8; }
+    .form-group input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid #334155;
+      border-radius: 0.5rem;
+      background: #0f172a;
+      color: #e2e8f0;
+      font-size: 1rem;
+    }
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary { background: #3b82f6; color: white; width: 100%; }
+    .btn-primary:hover { background: #2563eb; }
+    .btn-success { background: #22c55e; color: white; }
+    .btn-success:hover { background: #16a34a; }
+    .btn-sm { padding: 0.4rem 0.875rem; font-size: 0.75rem; }
+
+    .dashboard { display: none; }
+    .dashboard.show { display: block; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: #111827;
+      padding: 1.5rem;
+      border-radius: 0.75rem;
+      border-left: 4px solid #3b82f6;
+    }
+    .stat-card h3 { font-size: 2rem; color: #3b82f6; }
+    .stat-card p { color: #94a3b8; font-size: 0.875rem; }
+
+    .section {
+      background: #111827;
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid #1e293b;
+    }
+    .section h2 {
+      font-size: 1.125rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid #334155; }
+    .tab {
+      padding: 0.75rem 1.25rem;
+      background: none;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 0.875rem;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+    }
+    .tab.active { color: #3b82f6; border-bottom-color: #3b82f6; }
+
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 0.875rem; text-align: left; font-size: 0.875rem; }
+    th { color: #94a3b8; font-weight: 500; border-bottom: 1px solid #334155; }
+    td { border-bottom: 1px solid #1e293b; }
+    tr:hover td { background: #0f172a; }
+
+    .badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 2rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .badge-success { background: #14532d; color: #86efac; }
+    .badge-danger { background: #7f1d1d; color: #fca5a5; }
+    .badge-warning { background: #713f12; color: #fde047; }
+
+    .actions { display: flex; gap: 0.5rem; }
+
+    .generate-form {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-end;
+      flex-wrap: wrap;
+    }
+    .generate-form .form-group { flex: 1; min-width: 150px; }
+
+    .toast {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      padding: 1rem 1.5rem;
+      border-radius: 0.5rem;
+      color: white;
+      font-size: 0.875rem;
+      z-index: 200;
+      animation: slideIn 0.3s ease;
+    }
+    .toast-success { background: #22c55e; }
+    .toast-error { background: #ef4444; }
+    @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+    @media (max-width: 768px) {
+      .header { flex-direction: column; gap: 1rem; }
+      .generate-form { flex-direction: column; }
+      .generate-form .form-group { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="logo">
+      <i class="fas fa-futbol"></i>
+      <h1>Football <span>AI</span> Admin</h1>
+    </div>
+    <button class="btn-danger" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </header>
+
+  <main class="container">
+    <div class="login-screen" id="loginScreen">
+      <div class="login-box">
+        <h2><i class="fas fa-shield-alt"></i> Admin Login</h2>
+        <div class="form-group">
+          <label>Admin Password</label>
+          <input type="password" id="adminPassword" placeholder="Enter admin password">
+        </div>
+        <button class="btn btn-primary" onclick="adminLogin()">Login</button>
+      </div>
+    </div>
+
+    <div class="dashboard" id="dashboard">
+      <div class="stats-grid" id="statsGrid"></div>
+
+      <div class="section">
+        <h2><i class="fas fa-plus-circle"></i> Generate Access Code</h2>
+        <div class="generate-form">
+          <div class="form-group">
+            <label>Max Uses</label>
+            <input type="number" id="maxUses" value="1" min="1">
+          </div>
+          <div class="form-group">
+            <label>Expires In (days, optional)</label>
+            <input type="number" id="expiresIn" placeholder="Never" min="1">
+          </div>
+          <button class="btn btn-success" onclick="generateCode()">Generate Code</button>
+        </div>
+        <div id="generatedCode" style="margin-top:1rem;"></div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" onclick="showTab('codes')">Access Codes</button>
+        <button class="tab" onclick="showTab('users')">Users</button>
+        <button class="tab" onclick="showTab('matches')">Matches</button>
+        <button class="tab" onclick="showTab('predictions')">Predictions</button>
+      </div>
+
+      <div id="tabContent"></div>
+    </div>
+  </main>
+
+  <script>
+    const API_URL = '';
+    let token = localStorage.getItem('fai_admin_token');
+
+    if (token) verifyToken();
+
+    async function adminLogin() {
+      const password = document.getElementById('adminPassword').value;
+
+      try {
+        const res = await fetch(`${API_URL}/api/auth/admin-login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          token = data.token;
+          localStorage.setItem('fai_admin_token', token);
+          showDashboard();
+        } else {
+          showToast(data.message, 'error');
+        }
+      } catch (err) {
+        showToast('Login failed', 'error');
+      }
+    }
+
+    async function verifyToken() {
+      try {
+        const res = await fetch(`${API_URL}/api/auth/verify`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.valid && data.user?.role === 'admin') {
+          showDashboard();
+        } else {
+          localStorage.removeItem('fai_admin_token');
+          token = null;
+        }
+      } catch {
+        localStorage.removeItem('fai_admin_token');
+        token = null;
+      }
+    }
+
+    function showDashboard() {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('dashboard').classList.add('show');
+      loadStats();
+      showTab('codes');
+    }
+
+    function logout() {
+      localStorage.removeItem('fai_admin_token');
+      token = null;
+      location.reload();
+    }
+
+    async function loadStats() {
+      try {
+        const res = await fetch(`${API_URL}/api/admin/dashboard`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+
+        if (!data.success) throw new Error(data.message);
+
+        const s = data.stats;
+        document.getElementById('statsGrid').innerHTML = `
+          <div class="stat-card"><h3>${s.totalUsers}</h3><p>Total Users</p></div>
+          <div class="stat-card"><h3>${s.activeCodes}</h3><p>Active Codes</p></div>
+          <div class="stat-card"><h3>${s.todayMatches}</h3><p>Today's Matches</p></div>
+          <div class="stat-card"><h3>${s.recommendedMatches}</h3><p>Recommended</p></div>
+          <div class="stat-card"><h3>${s.totalPredictions}</h3><p>Total Predictions</p></div>
+          <div class="stat-card"><h3>${s.accuracy}%</h3><p>Accuracy Rate</p></div>
+        `;
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function generateCode() {
+      const maxUses = parseInt(document.getElementById('maxUses').value) || 1;
+      const expiresIn = document.getElementById('expiresIn').value;
+
+      try {
+        const res = await fetch(`${API_URL}/api/admin/codes`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            maxUses,
+            expiresInDays: expiresIn ? parseInt(expiresIn) : null
+          })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          document.getElementById('generatedCode').innerHTML = `
+            <div style="background:#0f172a;padding:1rem;border-radius:0.5rem;border:1px solid #22c55e;">
+              <p style="color:#94a3b8;font-size:0.875rem;">Generated Code:</p>
+              <p style="font-size:1.5rem;font-weight:700;color:#22c55e;font-family:monospace;">${data.accessCode.code}</p>
+              <p style="color:#94a3b8;font-size:0.875rem;">Max Uses: ${data.accessCode.maxUses}</p>
+            </div>
+          `;
+          showTab('codes');
+          showToast('Code generated successfully', 'success');
+        }
+      } catch (err) {
+        showToast('Failed to generate code', 'error');
+      }
+    }
+
+    async function showTab(tab) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      event.target.classList.add('active');
+
+      const container = document.getElementById('tabContent');
+      container.innerHTML = '<p style="text-align:center;padding:2rem;"><i class="fas fa-spinner fa-spin"></i> Loading...</p>';
+
+      try {
+        let html = '';
+
+        if (tab === 'codes') {
+          const res = await fetch(`${API_URL}/api/admin/codes`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const data = await res.json();
+
+          html = `<table><thead><tr><th>Code</th><th>Max Uses</th><th>Used</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead><tbody>`;
+          data.codes.forEach(c => {
+            html += `<tr>
+              <td><code style="color:#3b82f6;">${c.code}</code></td>
+              <td>${c.maxUses}</td>
+              <td>${c.usedCount}</td>
+              <td><span class="badge ${c.isActive ? 'badge-success' : 'badge-danger'}">${c.isActive ? 'Active' : 'Inactive'}</span></td>
+              <td>${new Date(c.createdAt).toLocaleDateString()}</td>
+              <td class="actions">
+                ${c.isActive ? `<button class="btn btn-danger btn-sm" onclick="revokeCode('${c._id}')">Revoke</button>` : ''}
+              </td>
+            </tr>`;
+          });
+          html += '</tbody></table>';
+
+        } else if (tab === 'users') {
+          const res = await fetch(`${API_URL}/api/admin/users`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const data = await res.json();
+
+          html = `<table><thead><tr><th>Name</th><th>Code</th><th>Role</th><th>Last Login</th><th>Status</th><th>Actions</th></tr></thead><tbody>`;
+          data.users.forEach(u => {
+            html += `<tr>
+              <td>${u.name}</td>
+              <td><code style="color:#3b82f6;">${u.accessCode}</code></td>
+              <td>${u.role}</td>
+              <td>${u.lastLogin ? new Date(u.lastLogin).toLocaleString() : 'Never'}</td>
+              <td><span class="badge ${u.isActive ? 'badge-success' : 'badge-danger'}">${u.isActive ? 'Active' : 'Inactive'}</span></td>
+              <td class="actions">
+                <button class="btn ${u.isActive ? 'btn-danger' : 'btn-success'} btn-sm" onclick="toggleUser('${u._id}')">${u.isActive ? 'Disable' : 'Enable'}</button>
+              </td>
+            </tr>`;
+          });
+          html += '</tbody></table>';
+
+        } else if (tab === 'matches') {
+          html = `
+            <div style="margin-bottom:1rem;">
+              <button class="btn btn-primary" onclick="fetchMatches()"><i class="fas fa-sync"></i> Fetch Today's Matches</button>
+            </div>
+            <p>Click "Fetch Today's Matches" to manually trigger match fetch and analysis.</p>
+          `;
+
+        } else if (tab === 'predictions') {
+          const res = await fetch(`${API_URL}/api/predictions/history?limit=50`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const data = await res.json();
+
+          html = `<table><thead><tr><th>Match</th><th>Prediction</th><th>Result</th><th>Confidence</th><th>Status</th></tr></thead><tbody>`;
+          data.logs.forEach(l => {
+            html += `<tr>
+              <td>${l.homeTeam} vs ${l.awayTeam}</td>
+              <td><span class="badge badge-warning">${l.bestBet}</span></td>
+              <td>${l.actualResult ? `${l.actualResult.homeGoals}-${l.actualResult.awayGoals}` : 'Pending'}</td>
+              <td>${l.confidence}%</td>
+              <td><span class="badge ${l.predictionCorrect === null ? 'badge-warning' : l.predictionCorrect ? 'badge-success' : 'badge-danger'}">${l.predictionCorrect === null ? 'Pending' : l.predictionCorrect ? 'Correct' : 'Wrong'}</span></td>
+            </tr>`;
+          });
+          html += '</tbody></table>';
+        }
+
+        container.innerHTML = html;
+
+      } catch (err) {
+        container.innerHTML = `<p style="color:#ef4444;text-align:center;padding:2rem;">Error: ${err.message}</p>`;
+      }
+    }
+
+    async function revokeCode(id) {
+      if (!confirm('Revoke this code?')) return;
+      await fetch(`${API_URL}/api/admin/codes/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      showTab('codes');
+      showToast('Code revoked', 'success');
+    }
+
+    async function toggleUser(id) {
+      await fetch(`${API_URL}/api/admin/users/${id}`, {
+        method: 'PATCH',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      showTab('users');
+      showToast('User updated', 'success');
+    }
+
+    async function fetchMatches() {
+      try {
+        const res = await fetch(`${API_URL}/api/admin/fetch-matches`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        showToast(`Fetched ${data.fetched} matches, analyzed ${data.analyzed}`, 'success');
+        loadStats();
+      } catch (err) {
+        showToast('Failed to fetch matches', 'error');
+      }
+    }
+
+    function showToast(message, type) {
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+  </script>
+</body>
+</html>
