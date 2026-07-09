@@ -50,10 +50,14 @@ mongoose.connect(MONGODB_URI)
     console.log('⚠️ Running without database - some features may be limited');
   });
 
-// Routes
-app.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, 'views', 'login.html'));
-});
+// Route 
+const authRoutes = require('./routes/auth');
+const adminRoutes = require('./routes/admin');
+const accessCodeRoutes = require('./routes/accessCodes');
+
+app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/access-codes', accessCodeRoutes);
 
 app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'admin.html'));
