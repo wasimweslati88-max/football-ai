@@ -31,7 +31,8 @@ app.use(express.static(path.join(__dirname)));
 
 // الاتصال بقاعدة البيانات
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/football_ai';
-require('./db').connect(MONGODB_URI)
+require('./db')(MONGODB_URI)
+    
     .then(() => console.log('✅ تم الاتصال بـ MongoDB'))
     .catch(err => console.error('❌ خطأ في MongoDB:', err.message));
 
