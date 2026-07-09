@@ -3,48 +3,31 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
-const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
 require('dotenv').config();
 
-const cron = require('node-cron');
-
-// Import jobs
-const { fetchDailyMatches } = require('./jobs/fetchMatches');
-const { analyzeMatches } = require('./jobs/analyzeMatches');
-const { trackResults } = require('./jobs/resultTracker');
-const { cleanupOldMatches } = require('./jobs/cleanupMatches');
-
-// Import routes
-const matchRoutes = require('./routes/matches');
-const adminRoutes = require('./routes/admin');
-const authRoutes = require('./routes/auth');
-const predictionRoutes = require('./routes/predictions');
-const notificationRoutes = require('./routes/notifications');
-
 const app = express();
-const PORT = process.env.PORT || 10000;
+const PORT = process.env.PORT || 3000;
 
-// ─── SECURITY MIDDLEWARE ──────────────────────────────────────
+// Middleware
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
       scriptSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      imgSrc: ["'self'", "data:", "https:", "blob:"],
-      connectSrc: ["'self'"],
-    },
-  },
+      fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'"]
+    }
+  }
 }));
 
 app.use(compression());
 app.use(cors());
-app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Rate limiting
 const limiter = rateLimit({
@@ -54,119 +37,85 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// Set view engine
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
+// Static files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ─── MONGODB CONNECTION ─────────────────────────────────────
-const connectDB = async () => {
-  try {
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log('✅ MongoDB Connected Successfully');
-  } catch (err) {
-    console.error('❌ MongoDB Connection Error:', err.message);
-    process.exit(1);
-  }
-};
-connectDB();
+// MongoDB Connection
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/football_ai';
 
-// ─── ROUTES ─────────────────────────────────────────────────
+mongoose.connect(MONGODB_URI)
+  .then(() => console.log('✅ MongoDB Connected'))
+  .catch(err => {
+    console.error('❌ MongoDB Error:', err.message);
+    console.log('⚠️ Running without database - some features may be limited');
+  });
+
+// Routes
+const authRoutes = require('./routes/auth');
+const matchRoutes = require('./routes/matches');
+const adminRoutes = require('./routes/admin');
+const predictionRoutes = require('./routes/predictions');
+const accessCodeRoutes = require('./routes/accessCodes');
+
+app.use('/api/auth', authRoutes);
 app.use('/api/matches', matchRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/auth', authRoutes);
 app.use('/api/predictions', predictionRoutes);
-app.use('/api/notifications', notificationRoutes);
+app.use('/api/access-codes', accessCodeRoutes);
 
-// Public pages
-app.get('/', (req, res) => res.render('index'));
-app.get('/admin', (req, res) => res.render('admin'));
-app.get('/login', (req, res) => res.render('login'));
-app.get('/history', (req, res) => res.render('history'));
-app.get('/stats', (req, res) => res.render('stats'));
+// Serve HTML pages
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'index.html'));
+});
 
-// Health check
-app.get('/health', (req, res) => {
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'login.html'));
+});
+
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'admin.html'));
+});
+
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'dashboard.html'));
+});
+
+app.get('/matches', (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'matches.html'));
+});
+
+// API Health Check
+app.get('/api/health', (req, res) => {
   res.json({ 
+    success: true, 
     status: 'OK', 
     timestamp: new Date().toISOString(),
-    uptime: process.uptime()
+    version: '1.0.0'
   });
 });
 
-// 404 handler
+// 404 Handler
 app.use((req, res) => {
-  res.status(404).json({ success: false, message: 'Route not found' });
+  if (req.path.startsWith('/api/')) {
+    res.status(404).json({ success: false, message: 'API endpoint not found' });
+  } else {
+    res.status(404).sendFile(path.join(__dirname, 'views', '404.html'));
+  }
 });
 
-// Global error handler
+// Error Handler
 app.use((err, req, res, next) => {
-  console.error('❌ Error:', err.stack);
-  res.status(err.status || 500).json({ 
-    success: false, 
-    message: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message 
-  });
+  console.error('Error:', err);
+  if (req.path.startsWith('/api/')) {
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  } else {
+    res.status(500).send('Something went wrong!');
+  }
 });
 
-// ─── AUTOMATED CRON JOBS ────────────────────────────────────
-
-const runDailyJob = async () => {
-  console.log('🔄 [CRON] Running daily match fetch and analysis...');
-  try {
-    const matches = await fetchDailyMatches();
-    console.log(`📊 Fetched ${matches.length} matches`);
-    const analyzed = await analyzeMatches(matches);
-    console.log(`✅ Analyzed ${analyzed.length} matches`);
-  } catch (err) {
-    console.error('❌ Daily job error:', err.message);
-  }
-};
-
-const runResultTracker = async () => {
-  console.log('🔄 [CRON] Tracking match results...');
-  try {
-    await trackResults();
-  } catch (err) {
-    console.error('❌ Result tracker error:', err.message);
-  }
-};
-
-const runCleanup = async () => {
-  console.log('🔄 [CRON] Cleaning up old matches...');
-  try {
-    const deleted = await cleanupOldMatches();
-    console.log(`🗑️ Cleaned up ${deleted} old matches`);
-  } catch (err) {
-    console.error('❌ Cleanup error:', err.message);
-  }
-};
-
-// Schedule: Daily fetch at 00:05 UTC
-cron.schedule('5 0 * * *', runDailyJob, { timezone: 'UTC' });
-
-// Schedule: Result tracker every 30 minutes
-cron.schedule('*/30 * * * *', runResultTracker, { timezone: 'UTC' });
-
-// Schedule: Cleanup every hour
-cron.schedule('0 * * * *', runCleanup, { timezone: 'UTC' });
-
-// Run on startup (with delays to avoid conflicts)
-setTimeout(runDailyJob, 5000);
-setTimeout(runResultTracker, 15000);
-setTimeout(runCleanup, 25000);
-
-// ─── START SERVER ─────────────────────────────────────────────
 app.listen(PORT, () => {
-  console.log('╔══════════════════════════════════════════════╗');
-  console.log('║     🏆 Football AI Server Running            ║');
-  console.log(`║     Port: ${PORT}                              ║`);
-  console.log(`║     Env:  ${process.env.NODE_ENV || 'development'}                         ║`);
-  console.log('║                                              ║');
-  console.log('║     Jobs:                                    ║');
-  console.log('║     • Daily Fetch: 00:05 UTC                 ║');
-  console.log('║     • Result Tracker: Every 30 min         ║');
-  console.log('║     • Cleanup: Every hour                    ║');
-  console.log('╚══════════════════════════════════════════════╝');
+  console.log(`🚀 Football AI Server running on port ${PORT}`);
+  console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
 module.exports = app;
