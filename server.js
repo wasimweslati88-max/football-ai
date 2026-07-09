@@ -1,7 +1,4 @@
 const express = require('express');
-const cron = require('node-cron');
-const matchService = require('./services/matchService');
-
 const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -13,106 +10,44 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'"]
-    }
-  }
-}));
-
+// Middleware الأساسي للأمان والأداء
+app.use(helmet());
 app.use(compression());
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Rate limiting
+// حماية السيرفر من الطلبات الكثيرة
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: { success: false, message: 'Too many requests, please try again later.' }
+    windowMs: 15 * 60 * 1000,
+    max: 100
 });
 app.use('/api/', limiter);
 
-// Static files
+// تشغيل الملفات الثابتة (الصور، التنسيقات، وغيرها)
 app.use(express.static(path.join(__dirname, 'public')));
 
-// MongoDB Connection
+// الاتصال بقاعدة البيانات
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/football_ai';
-
 mongoose.connect(MONGODB_URI)
-  .then(() => console.log('✅ MongoDB Connected'))
-  .catch(err => {
-    console.error('❌ MongoDB Error:', err.message);
-    console.log('⚠️ Running without database - some features may be limited');
-  });
+    .then(() => console.log('✅ MongoDB Connected'))
+    .catch(err => console.error('❌ MongoDB Error:', err.message));
 
-// Route
+// المسارات الأساسية لعرض الواجهات
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'matches.html'));
 });
 
-app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, 'views', 'admin.html'));
-});
-
-app.get('/dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'views', 'dashboard.html'));
-});
-
 app.get('/matches', (req, res) => {
-  res.sendFile(path.join(__dirname, 'views', 'matches.html'));
+    res.sendFile(path.join(__dirname, 'views', 'matches.html'));
 });
 
-// API Health Check
+// مسار للتأكد من أن السيرفر يعمل (Health Check)
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    success: true, 
-    status: 'OK', 
-    timestamp: new Date().toISOString(),
-    version: '1.0.0'
-  });
+    res.json({ success: true, status: 'OK' });
 });
 
-// 404 Handler
-app.use((req, res) => {
-  if (req.path.startsWith('/api/')) {
-    res.status(404).json({ success: false, message: 'API endpoint not found' });
-  } else {
-    res.status(404).sendFile(path.join(__dirname, 'views', '404.html'));
-  }
-});
-
-// Error Handler
-app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  if (req.path.startsWith('/api/')) {
-    res.status(500).json({ success: false, message: 'Internal server error' });
-  } else {
-    res.status(500).send('Something went wrong!');
-  }
-});
-
+// تشغيل السيرفر
 app.listen(PORT, () => {
-  const cron = require('node-cron');
-const matchService = require('./services/matchService');
-
-cron.schedule('0 5 * * *', async () => {
-    try {
-        await matchService.fetchAndSaveMatches();
-    } catch (err) {
-        console.error(err);
-    }
+    console.log(`✅ Server running on port ${PORT}`);
 });
-  
-  console.log(`🚀 Football AI Server running on port ${PORT}`);
-  console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
-});
-
-module.exports = app;
