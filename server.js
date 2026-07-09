@@ -1,4 +1,7 @@
 const express = require('express');
+const cron = require('node-cron');
+const matchService = require('./services/matchService');
+
 const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -50,14 +53,10 @@ mongoose.connect(MONGODB_URI)
     console.log('⚠️ Running without database - some features may be limited');
   });
 
-// Route 
-const authRoutes = require('./routes/auth');
-const adminRoutes = require('./routes/admin');
-const accessCodeRoutes = require('./routes/accessCodes');
-
-app.use('/api/auth', authRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/access-codes', accessCodeRoutes);
+// Route
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'matches.html'));
+});
 
 app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'admin.html'));
@@ -101,6 +100,16 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
+  const cron = require('node-cron');
+const matchService = require('./services/matchService');
+
+cron.schedule('0 5 * * *', async () => {
+    try {
+        await matchService.fetchAndSaveMatches();
+    } catch (err) {
+        console.error(err);
+    }
+});
   
   console.log(`🚀 Football AI Server running on port ${PORT}`);
   console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
