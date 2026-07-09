@@ -51,23 +51,6 @@ mongoose.connect(MONGODB_URI)
   });
 
 // Routes
-const authRoutes = require('./routes/auth');
-const matchRoutes = require('./routes/matches');
-const adminRoutes = require('./routes/admin');
-const predictionRoutes = require('./routes/predictions');
-const accessCodeRoutes = require('./routes/accessCodes');
-
-app.use('/api/auth', authRoutes);
-app.use('/api/matches', matchRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/predictions', predictionRoutes);
-app.use('/api/access-codes', accessCodeRoutes);
-
-// Serve HTML pages
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'views', 'index.html'));
-});
-
 app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'login.html'));
 });
