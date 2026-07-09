@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Football AI - تحليل ذكي للمباريات</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <i class="fas fa-futbol"></i>
+      <span>Football AI</span>
+    </div>
+    <div class="nav-links">
+      <a href="/" class="active">الرئيسية</a>
+      <a href="/matches">المباريات</a>
+      <a href="/dashboard">لوحة التحكم</a>
+    </div>
+    <div class="nav-actions">
+      <button id="loginBtn" class="btn btn-primary">
+        <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
+      </button>
+      <button id="adminBtn" class="btn btn-secondary">
+        <i class="fas fa-user-shield"></i> الأدمن
+      </button>
+      <button id="logoutBtn" class="btn btn-danger" style="display:none;">
+        <i class="fas fa-sign-out-alt"></i> خروج
+      </button>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="hero">
+    <div class="hero-content">
+      <h1>Football AI</h1>
+      <p>ذكاء اصطناعي لتحليل مباريات كرة القدم</p>
+      <p class="subtitle">نختار لك أسهل 10 مباريات يومياً بناءً على 32 معيار تحليلي</p>
+      <div class="hero-buttons">
+        <button id="startBtn" class="btn btn-large btn-primary">
+          <i class="fas fa-rocket"></i> ابدأ الآن
+        </button>
+        <button id="viewMatchesBtn" class="btn btn-large btn-outline">
+          <i class="fas fa-list"></i> عرض المباريات
+        </button>
+      </div>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-card">
+        <i class="fas fa-brain"></i>
+        <span class="stat-number">32</span>
+        <span class="stat-label">معيار تحليلي</span>
+      </div>
+      <div class="stat-card">
+        <i class="fas fa-shield-alt"></i>
+        <span class="stat-number">10</span>
+        <span class="stat-label">مباريات آمنة يومياً</span>
+      </div>
+      <div class="stat-card">
+        <i class="fas fa-percentage"></i>
+        <span class="stat-number">85%</span>
+        <span class="stat-label">دقة التحليل</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Features -->
+  <section class="features">
+    <h2>مميزات Football AI</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <i class="fas fa-robot"></i>
+        <h3>ذكاء اصطناعي</h3>
+        <p>تحليل ذكي يعتمد على 32 معيار متقدم</p>
+      </div>
+      <div class="feature-card">
+        <i class="fas fa-filter"></i>
+        <h3>استبعاد المخاطر</h3>
+        <p>نستبعد المباريات ذات المخاطر المرتفعة تلقائياً</p>
+      </div>
+      <div class="feature-card">
+        <i class="fas fa-chart-line"></i>
+        <h3>تحليل إحصائي</h3>
+        <p>إحصائيات دقيقة لكل فريق</p>
+      </div>
+      <div class="feature-card">
+        <i class="fas fa-mobile-alt"></i>
+        <h3>سهل الاستخدام</h3>
+        <p>واجهة بسيطة على جميع الأجهزة</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Login Modal -->
+  <div id="loginModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2><i class="fas fa-sign-in-alt"></i> تسجيل الدخول</h2>
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="accessCode">كود الدخول</label>
+          <input type="text" id="accessCode" name="accessCode" placeholder="أدخل كود الدخول" required>
+        </div>
+        <div class="form-group">
+          <label for="userName">الاسم (اختياري)</label>
+          <input type="text" id="userName" name="name" placeholder="اسمك">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">
+          <i class="fas fa-sign-in-alt"></i> دخول
+        </button>
+        <div id="loginError" class="error-message"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Admin Modal -->
+  <div id="adminModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2><i class="fas fa-user-shield"></i> دخول الأدمن</h2>
+      <form id="adminForm">
+        <div class="form-group">
+          <label for="adminPassword">كلمة المرور</label>
+          <input type="password" id="adminPassword" name="password" placeholder="كلمة مرور الأدمن" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">
+          <i class="fas fa-lock"></i> دخول كأدمن
+        </button>
+        <div id="adminError" class="error-message"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay" style="display:none;">
+    <div class="spinner"></div>
+    <p>جاري التحميل...</p>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+</html>
