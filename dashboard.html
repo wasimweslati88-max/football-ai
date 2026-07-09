@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة المستخدم - Football AI</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-brand">
+      <i class="fas fa-futbol"></i>
+      <span>Football AI</span>
+    </div>
+    <div class="nav-links">
+      <a href="/">الرئيسية</a>
+      <a href="/matches">المباريات</a>
+      <a href="/dashboard" class="active">لوحتي</a>
+    </div>
+    <div class="nav-actions">
+      <span id="userName" class="user-name"></span>
+      <button id="logoutBtn" class="btn btn-danger">
+        <i class="fas fa-sign-out-alt"></i> خروج
+      </button>
+    </div>
+  </nav>
+
+  <main class="dashboard">
+    <h1><i class="fas fa-chart-pie"></i> لوحة التحكم</h1>
+    <p>مرحباً <span id="welcomeName"></span>! إليك أفضل المباريات لهذا اليوم</p>
+
+    <div class="matches-section">
+      <h2><i class="fas fa-star"></i> أفضل 10 مباريات (أسهل المباريات)</h2>
+      <div id="topMatches" class="matches-grid">
+        <div class="loading-card">جاري تحميل المباريات...</div>
+      </div>
+    </div>
+  </main>
+
+  <div id="loadingOverlay" class="loading-overlay" style="display:none;">
+    <div class="spinner"></div>
+    <p>جاري التحميل...</p>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+</html>

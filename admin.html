@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة التحكم - Football AI</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <nav class="navbar admin-nav">
+    <div class="nav-brand">
+      <i class="fas fa-futbol"></i>
+      <span>Football AI <small>Admin</small></span>
+    </div>
+    <div class="nav-actions">
+      <button id="logoutBtn" class="btn btn-danger">
+        <i class="fas fa-sign-out-alt"></i> خروج
+      </button>
+    </div>
+  </nav>
+
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <ul class="sidebar-menu">
+        <li class="active" data-tab="dashboard"><i class="fas fa-tachometer-alt"></i> لوحة التحكم</li>
+        <li data-tab="codes"><i class="fas fa-key"></i> أكواد الدخول</li>
+        <li data-tab="users"><i class="fas fa-users"></i> المستخدمين</li>
+        <li data-tab="matches"><i class="fas fa-futbol"></i> المباريات</li>
+        <li data-tab="settings"><i class="fas fa-cog"></i> الإعدادات</li>
+      </ul>
+    </aside>
+
+    <main class="admin-main">
+      <!-- Dashboard Tab -->
+      <div id="dashboardTab" class="tab-content active">
+        <h1><i class="fas fa-tachometer-alt"></i> لوحة التحكم</h1>
+        <div class="stats-grid">
+          <div class="stat-box">
+            <i class="fas fa-users"></i>
+            <div>
+              <span id="totalUsers" class="stat-value">0</span>
+              <span class="stat-label">المستخدمين</span>
+            </div>
+          </div>
+          <div class="stat-box">
+            <i class="fas fa-key"></i>
+            <div>
+              <span id="totalCodes" class="stat-value">0</span>
+              <span class="stat-label">الأكواد</span>
+            </div>
+          </div>
+          <div class="stat-box">
+            <i class="fas fa-check-circle"></i>
+            <div>
+              <span id="usedCodes" class="stat-value">0</span>
+              <span class="stat-label">مستخدمة</span>
+            </div>
+          </div>
+          <div class="stat-box">
+            <i class="fas fa-futbol"></i>
+            <div>
+              <span id="todayMatches" class="stat-value">0</span>
+              <span class="stat-label">مباريات اليوم</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Codes Tab -->
+      <div id="codesTab" class="tab-content">
+        <h1><i class="fas fa-key"></i> إدارة أكواد الدخول</h1>
+        <div class="action-bar">
+          <button id="generateCodeBtn" class="btn btn-success">
+            <i class="fas fa-plus"></i> توليد كود عشوائي
+          </button>
+          <button id="createCodeBtn" class="btn btn-primary">
+            <i class="fas fa-edit"></i> إنشاء كود يدوي
+          </button>
+        </div>
+        <div class="table-container">
+          <table id="codesTable">
+            <thead>
+              <tr>
+                <th>الكود</th>
+                <th>الحالة</th>
+                <th>مستخدم من</th>
+                <th>تاريخ الإنشاء</th>
+                <th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="codesTableBody">
+              <tr><td colspan="5" class="text-center">جاري التحميل...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Users Tab -->
+      <div id="usersTab" class="tab-content">
+        <h1><i class="fas fa-users"></i> المستخدمين</h1>
+        <div class="table-container">
+          <table id="usersTable">
+            <thead>
+              <tr>
+                <th>الاسم</th>
+                <th>كود الدخول</th>
+                <th>عدد الدخول</th>
+                <th>آخر دخول</th>
+                <th>الحالة</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody">
+              <tr><td colspan="5" class="text-center">جاري التحميل...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Matches Tab -->
+      <div id="matchesTab" class="tab-content">
+        <h1><i class="fas fa-futbol"></i> المباريات</h1>
+        <div class="table-container">
+          <table id="matchesTable">
+            <thead>
+              <tr>
+                <th>المباراة</th>
+                <th>الدوري</th>
+                <th>التاريخ</th>
+                <th>المخاطر</th>
+                <th>التوصية</th>
+              </tr>
+            </thead>
+            <tbody id="matchesTableBody">
+              <tr><td colspan="5" class="text-center">جاري التحميل...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Settings Tab -->
+      <div id="settingsTab" class="tab-content">
+        <h1><i class="fas fa-cog"></i> الإعدادات</h1>
+        <div class="settings-card">
+          <h3>معلومات النظام</h3>
+          <p><strong>الإصدار:</strong> 1.0.0</p>
+          <p><strong>البيئة:</strong> <span id="envStatus">Production</span></p>
+          <p><strong>حالة الاتصال:</strong> <span id="dbStatus" class="status-online">متصل</span></p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Create Code Modal -->
+  <div id="createCodeModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>إنشاء كود جديد</h2>
+      <form id="createCodeForm">
+        <div class="form-group">
+          <label>الكود</label>
+          <input type="text" id="newCodeInput" placeholder="مثال: VIP2026" required>
+        </div>
+        <div class="form-group">
+          <label>مدة الصلاحية (أيام) - اختياري</label>
+          <input type="number" id="codeExpiry" placeholder="30" min="1">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">إنشاء</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="loadingOverlay" class="loading-overlay" style="display:none;">
+    <div class="spinner"></div>
+    <p>جاري التحميل...</p>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/admin.js"></script>
+</body>
+</html>
